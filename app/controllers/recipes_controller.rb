@@ -1,17 +1,17 @@
 class RecipesController < ApplicationController
   rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
-  rescue_from ActiveRecord::RecordNotFound, with: :render_record_not_found_response
-  
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
+
   def index
-    user = User.find_by!(id: session[:user_id])
-    recipes = user.recipes
+    recipes = Recipe.all
     render json: recipes, status: :ok
   end
 
   def create
-    user = User.find_by!(id: session[:user_id])
-    user.recipes.create!(recipe_params)
-    recipe = user.recipes.last
+    recipe_params_w_user = recipe_params
+    recipe_params_w_user[:user_id]=session[:user_id]
+    recipe = Recipe.create!(recipe_params_w_user)
     render json: recipe, status: :created
   end
 
@@ -20,13 +20,15 @@ class RecipesController < ApplicationController
   def recipe_params
     params.permit(:title, :instructions, :minutes_to_complete)
   end
-  def render_unprocessable_entity_response invalid
-    render json: {errors: invalid.record.errors.full_messages}, status: :unprocessable_entity
+
+  def render_unprocessable_entity_response(invalid)
+    render json: {errors: ["Unprocessable"]}, status: :unprocessable_entity
   end
-  
-  def render_record_not_found_response errors
-    errors_array = []
-    errors_array.push(errors.message)
-    render json: {errors: errors_array}, status: :unauthorized
+
+  def render_not_found_response invalid
+    render json: {errors: ["Unauthorized"]}, status: :unauthorized
   end
+
+
+
 end

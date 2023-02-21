@@ -16,6 +16,9 @@ function App() {
       }
     });
   }, []);
+  console.log('user', user)
+  console.log('!user', !user)
+
 
   if (!user) return <Login onLogin={setUser} />;
 

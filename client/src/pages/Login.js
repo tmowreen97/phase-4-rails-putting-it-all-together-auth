@@ -6,6 +6,8 @@ import { Button } from "../styles";
 
 function Login({ onLogin }) {
   const [showLogin, setShowLogin] = useState(true);
+  console.log('showLogin', showLogin)
+  console.log('onLogIn, which is equal to setUser', onLogin)
 
   return (
     <Wrapper>

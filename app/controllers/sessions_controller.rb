@@ -1,36 +1,29 @@
 class SessionsController < ApplicationController
-rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
-rescue_from ActiveRecord::RecordNotFound, with: :render_record_not_found_response
-
+rescue_from ActiveRecord::RecordInvalid, with: :render_not_found_response
+skip_before_action :authorized, only:[:create]
   def create
-    user= User.find_by!(username: params[:username])
+    user= User.find_by(username: params[:username])
     if user&.authenticate(params[:password])
-      session[:user_id]= user.id
-      render json: user, status: :created
+      session[:user_id]||=user.id
+      render json: user, status: :ok
     else
-      render json: {error: "invalid username or password"}, status: :unauthorized
+      raise ActiveRecord::RecordInvalid
     end
-      
   end
 
   def destroy
-    user = User.find_by!(id: session[:user_id])
-    if user
-      session[:user_id]=nil
+    if session[:user_id]
+      session[:user_id] = nil
+      head :no_content
+    else 
+      raise ActiveRecord::RecordInvalid
     end
   end
-
   private 
 
-  
-  
-  def render_unprocessable_entity_response invalid
-    render json: {errors: invalid.record.errors.full_messages}, status: :unprocessable_entity
-  end
-  
-  def render_record_not_found_response errors
-    error_array = []
-    error_array.push(errors.message)
-    render json: {errors: error_array}, status: :unauthorized
+  def render_not_found_response invalid
+    # byebug
+    render json: {errors: ["Invalid username or password"]}, status: :unauthorized
+
   end
 end
